@@ -6,6 +6,20 @@
 # 依赖目录
 node_modules/
 
+# 密钥、证书与凭证文件（禁止上传）
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.*
+credentials.json
+service-account*.json
+
+# 本地数据库文件（禁止上传）
+*.db
+*.sqlite
+*.sqlite3
+
 # 系统文件
 .DS_Store
 Thumbs.db
