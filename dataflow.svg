@@ -1,0 +1,55 @@
+<svg viewBox="0 0 680 250" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>学习笔记站数据流：从作者键盘到访客屏幕</title>
+  <desc>作者写Markdown文件，git push到GitHub仓库，GitHub Pages发布，访客浏览器拉取并渲染</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <g>
+    <rect x="40" y="70" width="104" height="72" rx="12" stroke-width="0.5" stroke="#185FA5" fill="#E6F1FB"/>
+    <text x="92" y="94" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#0C447C" font-family="sans-serif">作者</text>
+    <text x="92" y="114" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#185FA5" font-family="sans-serif">每天写笔记</text>
+  </g>
+  <line x1="144" y1="106" x2="162" y2="106" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="153" y="92" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#888780" font-family="sans-serif">写</text>
+  <g>
+    <rect x="164" y="70" width="104" height="72" rx="12" stroke-width="0.5" stroke="#185FA5" fill="#E6F1FB"/>
+    <text x="216" y="94" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#0C447C" font-family="sans-serif">笔记文件</text>
+    <text x="216" y="114" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#185FA5" font-family="sans-serif">notes/*.md</text>
+  </g>
+  <line x1="268" y1="106" x2="286" y2="106" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="277" y="92" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#888780" font-family="sans-serif">push</text>
+  <g>
+    <rect x="288" y="70" width="104" height="72" rx="12" stroke-width="0.5" stroke="#0F6E56" fill="#E1F5EE"/>
+    <text x="340" y="94" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#085041" font-family="sans-serif">GitHub 仓库</text>
+    <text x="340" y="114" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56" font-family="sans-serif">数据存这里</text>
+  </g>
+  <line x1="392" y1="106" x2="410" y2="106" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="401" y="92" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#888780" font-family="sans-serif">发布</text>
+  <g>
+    <rect x="412" y="70" width="104" height="72" rx="12" stroke-width="0.5" stroke="#0F6E56" fill="#E1F5EE"/>
+    <text x="464" y="94" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#085041" font-family="sans-serif">GitHub Pages</text>
+    <text x="464" y="114" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56" font-family="sans-serif">变成网站</text>
+  </g>
+  <line x1="516" y1="106" x2="534" y2="106" stroke="#888780" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="525" y="92" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#888780" font-family="sans-serif">HTTPS</text>
+  <g>
+    <rect x="536" y="70" width="104" height="72" rx="12" stroke-width="0.5" stroke="#185FA5" fill="#E6F1FB"/>
+    <text x="588" y="94" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#0C447C" font-family="sans-serif">访客浏览器</text>
+    <text x="588" y="114" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56" font-family="sans-serif">JS 拉取并渲染</text>
+  </g>
+  <text x="340" y="46" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#444441" font-family="sans-serif">Day 7 静态版数据流（实线）：键盘进，屏幕出，仓库是唯一数据源</text>
+  <line x1="588" y1="142" x2="588" y2="186" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="460" y="188" width="128" height="44" rx="10" stroke-width="0.5" stroke="#854F0B" fill="#FAEEDA"/>
+    <text x="524" y="210" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#633806" font-family="sans-serif">在线写笔记表单</text>
+  </g>
+  <line x1="460" y1="210" x2="382" y2="210" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="254" y="188" width="128" height="44" rx="10" stroke-width="0.5" stroke="#854F0B" fill="#FAEEDA"/>
+    <text x="318" y="210" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#633806" font-family="sans-serif">云数据库</text>
+  </g>
+  <line x1="254" y1="210" x2="176" y2="210" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="215" y="250" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#888780" font-family="sans-serif">Day 23 起（虚线）：数据改存数据库，网页在线读写</text>
+</svg>
