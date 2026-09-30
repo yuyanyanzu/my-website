@@ -13,26 +13,20 @@
     <p class="site-slogan">一个零基础学习者的 30 天建站记录，每天学什么，这里都能看到。</p>
   </header>
 
+  <!-- 开发提示条（Day 8）：当前数据来自本地假数据，方便对照 -->
+  <div class="mock-banner" id="mock-banner">
+    开发中：当前展示的是 <strong>本地示例数据</strong>（mock），不代表真实笔记
+  </div>
+
   <main class="container">
     <!-- 标签栏：点击筛选（F3 / AC-4） -->
-    <nav id="tag-bar" class="tag-bar" aria-label="标签筛选">
-      <!-- 标签按钮由 app.js 根据笔记数据动态生成 -->
-    </nav>
+    <nav id="tag-bar" class="tag-bar" aria-label="标签筛选"></nav>
 
     <!-- 笔记列表：按日期倒序的卡片（F1 / AC-1、AC-2） -->
-    <section id="note-list" class="note-list" aria-label="笔记列表">
-      <!-- 卡片由 app.js 动态生成 -->
-    </section>
+    <section id="note-list" class="note-list" aria-label="笔记列表"></section>
 
-    <!-- 空状态：筛选无结果时显示（F3 / AC-7） -->
-    <div id="empty-state" class="empty-state" hidden>
-      <p>这个标签下还没有笔记，点击「全部」返回完整列表。</p>
-    </div>
-
-    <!-- 加载提示：笔记还没拉取完时显示 -->
-    <div id="loading" class="loading">
-      <p>笔记加载中……</p>
-    </div>
+    <!-- 状态区：加载中 / 空 / 出错 三种非正常状态都渲染在这里（Day 8） -->
+    <div id="state-area" class="state-area" hidden></div>
   </main>
 
   <!-- 关于区块（F4 / AC-5）：自我介绍 + 学习目标 + GitHub 链接 -->
@@ -43,8 +37,10 @@
     <p><a href="https://github.com/yuyanyanzu/my-website" target="_blank" rel="noopener">GitHub 仓库 →</a></p>
   </footer>
 
-  <!-- marked.js：把 Markdown 渲染成 HTML 的成熟小库（技术选型见 TECH_DESIGN.md 第 3 节） -->
+  <!-- 加载顺序有讲究：marked（渲染库）→ mock-data（数据）→ components（组件）→ app（逻辑） -->
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="mock-data.js"></script>
+  <script src="components.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

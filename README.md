@@ -38,6 +38,22 @@ npx serve .
 | 手机宽度（开发者工具切 375px）无横向滚动 | AC-6 |
 | 点一个没有笔记的标签（暂无，加新标签可试）显示空状态提示 | AC-7 |
 
+## Day 8：数据源开关与四种页面状态
+
+主视图现在默认用**本地假数据（mock）**渲染，不依赖真实数据源，方便先调界面。
+
+- **切换数据源**：打开 `app.js`，顶部 `USE_MOCK = true` 用假数据（`mock-data.js`），改成 `false` 则回到读取 `notes/` 真实 Markdown 文件（Day 7 的实现，保留备用）。
+- **预览四种页面状态**（浏览器地址栏直接加参数）：
+
+  | 网址 | 看到的状态 |
+  |---|---|
+  | `http://localhost:8080/` | 先「加载中」→ 再「有数据」 |
+  | `http://localhost:8080/?delay=3000` | 加载状态停留 3 秒，方便观察 |
+  | `http://localhost:8080/?state=empty` | 空状态（模拟还没有笔记） |
+  | `http://localhost:8080/?state=error` | 出错状态（含排查指引） |
+
+- **组件在哪**：卡片、列表、状态提示三个可复用组件都在 `components.js`，业务逻辑在 `app.js`——换数据来源不用改组件。
+
 ## 如何发布一篇新笔记
 
 1. 在 `notes/` 目录新建一个 `.md` 文件，头部按固定格式写四行字段：
@@ -60,9 +76,11 @@ npx serve .
 ```text
 my-website/
 ├── index.html      页面骨架
-├── style.css       样式（含手机适配）
-├── app.js          数据加载 / 筛选 / 展开交互
-├── notes/          笔记（Markdown 文件，头部含字段）
+├── style.css       样式（含手机适配与四种状态样式）
+├── app.js          数据源开关 / 四种状态 / 标签筛选逻辑
+├── components.js   可复用组件：卡片、列表、状态提示（Day 8）
+├── mock-data.js    本地假数据，8 篇示例笔记（Day 8）
+├── notes/          真实笔记（Markdown 文件，头部含字段）
 ├── PRD.md          需求文档（Day 4）
 ├── TECH_DESIGN.md  技术设计（Day 5）
 ├── research.md     需求研究（Day 3）

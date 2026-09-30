@@ -1,9 +1,19 @@
-// app.js — 学习笔记站交互逻辑（Day 7）
-// 职责：加载 notes/ 下的 Markdown 笔记 → 解析头部字段 → 渲染卡片 → 标签筛选 → 点击展开正文
-// 数据流见 TECH_DESIGN.md 第 1、4 节
+// app.js — 学习笔记站交互逻辑（Day 8：mock 数据版主视图）
+// 职责：拉数据 → 处理四种页面状态 → 渲染标签栏与列表 → 标签筛选
+// 数据来源由 USE_MOCK 开关控制：true = 本地假数据（Day 8），false = notes/ 目录的 Markdown 文件（Day 7）
+// 组件（卡片/列表/状态提示）在 components.js，数据流见 TECH_DESIGN.md 第 1、4 节
 
-// 笔记文件清单：新增一篇笔记 = 在 notes/ 目录建一个 .md 文件，然后在这里加一行文件名
-// （静态站没法自动列目录，Day 23 接数据库后这一步会消失）
+// ============ 开关区 ============
+const USE_MOCK = true;          // Day 23 接数据库时，这里改成 false 或换成接口地址即可
+
+// 假数据的模拟延迟（毫秒）：故意留出来，好观察"加载中"状态
+const MOCK_DELAY = 600;
+
+// 演示用：在网址后加 ?state=empty / ?state=error / ?delay=3000 可预览不同状态（方便截图与自测）
+const DEMO_STATE = new URLSearchParams(location.search).get("state");
+const DEMO_DELAY = Number(new URLSearchParams(location.search).get("delay")) || MOCK_DELAY;
+
+// 真实文件清单（USE_MOCK = false 时生效）：新增一篇笔记 = 建一个 .md 文件 + 在这里加一行
 const NOTE_FILES = [
   "2026-09-27-给AI定规矩.md",
   "2026-09-26-技术选型.md",
@@ -11,37 +21,44 @@ const NOTE_FILES = [
   "2026-09-22-Git三连.md",
 ];
 
+// ============ DOM ============
 const noteList = document.getElementById("note-list");
 const tagBar = document.getElementById("tag-bar");
-const emptyState = document.getElementById("empty-state");
-const loading = document.getElementById("loading");
+const stateArea = document.getElementById("state-area");   // 加载 / 空 / 出错 三种状态都放这里
 
-let notes = [];      // 全部笔记（已按日期倒序）
+// ============ 状态 ============
+let notes = [];              // 全部笔记（已按日期倒序）
 let activeTag = "全部";
 
-// ---- 1. 拉取并解析所有笔记 ----
-async function loadNotes() {
-  // Promise.all：几篇笔记同时拉取，谁也不等谁
-  const results = await Promise.all(
+// ============ 1. 数据源层 ============
+// 统一出口 fetchNotes()：不管数据来自假数据、文件还是将来的数据库接口，都返回同样结构的数组
+async function fetchNotes() {
+  if (DEMO_STATE === "error") {
+    // 演示出错状态：模拟接口失败
+    throw new Error("示例错误：数据源暂时不可用（这是 Day 8 的演示状态）");
+  }
+
+  if (USE_MOCK) {
+    // 模拟网络延迟，让"加载中"状态可见
+    await new Promise((resolve) => setTimeout(resolve, DEMO_DELAY));
+    if (DEMO_STATE === "empty") return [];   // 演示空状态
+    return MOCK_NOTES.slice();               // 用假数据（见 mock-data.js）
+  }
+
+  // 备选路径：读取 notes/ 下的真实 Markdown 文件（Day 7 的实现，保留不删）
+  const textList = await Promise.all(
     NOTE_FILES.map(async (file) => {
       const res = await fetch("notes/" + file);
-      const text = await res.text();
-      return parseNote(text);
+      if (!res.ok) throw new Error("读取 " + file + " 失败（HTTP " + res.status + "）");
+      return res.text();
     })
   );
-
-  // 按日期倒序：最新的排最上面（AC-1）
-  notes = results.sort((a, b) => (a.date < b.date ? 1 : -1));
-  loading.hidden = true;
-  buildTagBar();
-  renderNotes();
+  return textList.map(parseNote);
 }
 
-// 解析一篇 Markdown：
-// 头部（两个 --- 之间）是 date / title / tags / summary 四个字段（PRD 第 4 节）
-// 分隔线以下是正文 body
+// 解析 Markdown：头部（两个 --- 之间）是 date / title / tags / summary 四个字段（PRD 第 4 节）
 function parseNote(text) {
-  const parts = text.split(/^---\s*$/m); // 按单独一行的 --- 切开
+  const parts = text.split(/^---\s*$/m);
   const head = parts[1] || "";
   const body = (parts.slice(2).join("---") || "").trim();
 
@@ -52,7 +69,6 @@ function parseNote(text) {
     const key = line.slice(0, i).trim();
     const value = line.slice(i + 1).trim();
     if (key === "tags") {
-      // 标签用顿号或逗号分隔，存成数组
       note.tags = value.split(/[、,，]/).map((t) => t.trim()).filter(Boolean);
     } else {
       note[key] = value;
@@ -62,15 +78,23 @@ function parseNote(text) {
   return note;
 }
 
-// ---- 2. 渲染标签栏（F3 / AC-4）----
+// ============ 2. 四种页面状态 ============
+// 只保留一个显示中的状态，避免"加载中"和"空状态"同时出现
+function showState(type, message) {
+  stateArea.innerHTML = "";
+  stateArea.appendChild(createStateBox(type, message));  // 组件来自 components.js
+  stateArea.hidden = false;
+}
+
+function clearState() {
+  stateArea.innerHTML = "";
+  stateArea.hidden = true;
+}
+
+// ============ 3. 渲染：标签栏（F3 / AC-4）============
 function buildTagBar() {
-  // 收集所有笔记里出现过的标签，去重
   const tags = ["全部"];
-  notes.forEach((n) => {
-    n.tags.forEach((t) => {
-      if (!tags.includes(t)) tags.push(t);
-    });
-  });
+  notes.forEach((n) => n.tags.forEach((t) => { if (!tags.includes(t)) tags.push(t); }));
 
   tagBar.innerHTML = "";
   tags.forEach((tag) => {
@@ -78,7 +102,7 @@ function buildTagBar() {
     btn.className = "tag-btn" + (tag === activeTag ? " active" : "");
     btn.textContent = tag;
     btn.addEventListener("click", () => {
-      // 再点同一个标签 = 取消筛选，回到全部（PRD F3 的规则）
+      // 再点同一个标签 = 取消筛选，回到全部
       activeTag = tag === activeTag ? "全部" : tag;
       buildTagBar();
       renderNotes();
@@ -87,40 +111,36 @@ function buildTagBar() {
   });
 }
 
-// ---- 3. 渲染笔记列表（F1 / AC-1、AC-2；筛选 AC-4；空状态 AC-7）----
+// ============ 4. 渲染：列表 + 筛选 + 空状态（F1 / F2 / AC-1、AC-2、AC-3、AC-4、AC-7）============
 function renderNotes() {
   const visible = activeTag === "全部"
     ? notes
     : notes.filter((n) => n.tags.includes(activeTag));
 
-  noteList.innerHTML = "";
-  emptyState.hidden = visible.length > 0; // 没有结果就显示空状态提示
+  renderNoteList(noteList, visible);   // 组件来自 components.js
 
-  visible.forEach((note) => {
-    const card = document.createElement("article");
-    card.className = "note-card";
-
-    // 卡片四要素：日期、标题、标签、摘要（AC-2）
-    const tagsHtml = note.tags.map((t) => `<span class="note-tag">${t}</span>`).join("");
-    card.innerHTML = `
-      <div class="note-meta"><span>${note.date}</span>${tagsHtml}</div>
-      <h3>${note.title}</h3>
-      <p class="note-summary">${note.summary}</p>
-      <div class="note-body">${marked.parse(note.body)}</div>
-      <div class="note-toggle-hint"></div>
-    `;
-
-    // 点击卡片原位展开 / 收起正文（F2 / AC-3）
-    card.addEventListener("click", () => {
-      card.classList.toggle("open");
-    });
-
-    noteList.appendChild(card);
-  });
+  if (visible.length === 0) {
+    showState("empty", activeTag === "全部"
+      ? "还没有任何笔记，写下第一篇就会出现在这里。"
+      : "标签「" + activeTag + "」下还没有笔记，点「全部」返回完整列表。");
+  } else {
+    clearState();
+  }
 }
 
-// ---- 启动 ----
-loadNotes().catch((err) => {
-  loading.innerHTML = "<p>笔记加载失败：" + err.message +
-    "<br>请确认是用本地服务器打开的（见 README.md），而不是直接双击 index.html。</p>";
-});
+// ============ 5. 启动流程 ============
+async function init() {
+  showState("loading", USE_MOCK ? "正在读取本地示例数据……" : "正在读取笔记文件……");
+  try {
+    notes = await fetchNotes();
+    notes.sort((a, b) => (a.date < b.date ? 1 : -1));   // 日期倒序（AC-1）
+    buildTagBar();
+    renderNotes();
+  } catch (err) {
+    // 出错状态：说清"哪里错了 + 怎么补救"，绝不静默失败
+    showState("error", err.message +
+      "<br>可以这样排查：① 加上 ?delay=3000 看是否为超时；② 确认用本地服务器打开而不是双击 index.html；③ 查看浏览器控制台的具体报错。");
+  }
+}
+
+init();
