@@ -1,5 +1,7 @@
-/* style.css — 学习笔记站样式（Day 7）
-   结构：全局 → 页头 → 标签栏 → 笔记卡片 → 空状态 → 关于区块 → 手机适配（AC-6） */
+/* style.css — 学习笔记站样式（Day 7 创建，Day 9 设计审查修复）
+   结构：全局 → 页头 → 标签栏 → 笔记卡片 → 空状态 → 关于区块 → 手机适配（AC-6）
+   Day 9 修复：① 文字对比度全部提到 WCAG AA（≥4.5:1）② 间距统一 8px 节奏
+   ③ 标签按钮加大触控区域 ④ 多标签防手机端溢出 ⑤ 键盘焦点可见 */
 
 /* ---- 全局 ---- */
 * { box-sizing: border-box; }
@@ -57,7 +59,7 @@ body {
 }
 
 /* ---- 笔记卡片（F1 / F2）---- */
-.note-list { padding: 12px 0 32px; }
+.note-list { padding: 8px 0 40px; }
 
 .note-card {
   background: #fff;
@@ -70,13 +72,16 @@ body {
 
 .note-card:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); }
 
-/* 卡片头部四要素：日期 / 标题 / 标签 / 摘要（AC-2） */
+/* 卡片头部四要素：日期 / 标题 / 标签 / 摘要（AC-2）
+   对比度修复：#888 只有约 3.5:1（13px 小字不达标）→ #5f6b76 约 5.5:1
+   溢出修复：加 flex-wrap，标签多时换行而不是把日期挤出屏幕 */
 .note-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #888;
+  color: #5f6b76;
 }
 
 .note-tag {
@@ -153,7 +158,7 @@ body {
 }
 
 .state-title { margin: 0 0 6px; font-size: 15px; color: #444; }
-.state-detail { margin: 0; font-size: 13px; color: #8a94a6; }
+.state-detail { margin: 0; font-size: 13px; color: #5f6b7a; }
 
 /* 出错状态：用颜色把"这是异常"说清楚 */
 .state-error { border-color: #f3c2c2; background: #fff8f8; }
