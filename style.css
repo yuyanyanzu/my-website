@@ -1,7 +1,6 @@
-/* style.css — 学习笔记站样式（Day 7 创建，Day 9 设计审查修复）
-   结构：全局 → 页头 → 标签栏 → 笔记卡片 → 空状态 → 关于区块 → 手机适配（AC-6）
-   Day 9 修复：① 文字对比度全部提到 WCAG AA（≥4.5:1）② 间距统一 8px 节奏
-   ③ 标签按钮加大触控区域 ④ 多标签防手机端溢出 ⑤ 键盘焦点可见 */
+/* style.css — 学习笔记站样式
+   创建 Day 7，Day 9 设计审查修复，Day 11 加入交互反馈
+   结构：全局 → 页头 → 通知条 → 标签栏 → 笔记卡片 → 状态 → 关于区块 → 手机适配 → 减少动效偏好 */
 
 /* ---- 全局 ---- */
 * { box-sizing: border-box; }
@@ -20,6 +19,17 @@ body {
   padding: 0 16px;
 }
 
+/* 屏读器专用：视觉上隐藏，但读屏软件读得到（Day 11） */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---- 页头 ---- */
 .site-header {
   background: #1a73e8;
@@ -30,6 +40,44 @@ body {
 
 .site-header h1 { margin: 0 0 8px; font-size: 30px; }
 .site-header .site-slogan { margin: 0; color: #dbe8ff; font-size: 15px; }
+
+/* ---- 操作反馈通知条（Day 11）----
+   位置：固定在屏幕顶部居中，浮在内容之上
+   行为：加 .toast-show 时滑下来并淡入，1.8 秒后 JS 移除该类，自动滑回去
+   为什么用通知条：它是所有反馈通道里最"明确"的一个——
+   箭头转向要用户会看箭头，动效要用户盯着那块区域，而文字是直接读出来的，不需要推断 */
+.toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 100;
+  max-width: min(90vw, 480px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  text-align: center;
+
+  background: #1f2d3d;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+
+  /* 默认状态：透明 + 上移，收起来看不见（pointer-events 避免挡住下面的点击） */
+  opacity: 0;
+  transform: translate(-50%, -12px);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+/* 出现状态 */
+.toast-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+/* 三种语义色：成功（绿）/ 提示（深蓝灰）/ 警告（红） */
+.toast-success { background: #0f6e56; }
+.toast-error { background: #a32d2d; }
 
 /* ---- 标签栏（F3）---- */
 .tag-bar {
@@ -62,15 +110,56 @@ body {
 .note-list { padding: 8px 0 40px; }
 
 .note-card {
+  position: relative;
   background: #fff;
   border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   cursor: pointer;
+  /* Day 11：阴影和位移动画让"卡片被按到"这件事看得见 */
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .note-card:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1); }
+
+/* 按下瞬间再缩小一点点，模拟"被按下去"（active = 鼠标按住不放的那一刻） */
+.note-card:active { transform: scale(0.995); }
+
+/* Day 11 反馈②：展开的卡片左侧出现一条高亮竖条
+   左侧竖条必须绝对定位，否则它会挤动卡片内部布局 */
+.note-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: #1a73e8;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.note-card.open::before { opacity: 1; }
+
+/* 展开中的卡片边框轻微染色，和未展开的区分开 */
+.note-card.open {
+  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.14);
+}
+
+/* Day 11 余力加练：键盘焦点状态
+   :focus-visible 只在"键盘操作"时出现，鼠标点击不会留下难看的描边 */
+.note-card:focus-visible,
+.tag-btn:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+/* 键盘聚焦到卡片时也给出同样的左侧高亮提示，让"我选中了这张"一眼可见 */
+.note-card:focus-visible {
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.2);
+}
 
 /* 卡片头部四要素：日期 / 标题 / 标签 / 摘要（AC-2）
    对比度修复：#888 只有约 3.5:1（13px 小字不达标）→ #5f6b76 约 5.5:1
@@ -94,20 +183,48 @@ body {
 .note-card h3 { margin: 8px 0 6px; font-size: 19px; }
 .note-summary { margin: 0; color: #666; font-size: 15px; }
 
-/* 展开提示箭头 */
-.note-toggle-hint { font-size: 13px; color: #aaa; margin-top: 8px; }
+/* 展开提示箭头：文字本身也会变（Day 7 起就有），Day 11 把它做得更醒目 */
+.note-toggle-hint {
+  font-size: 13px;
+  color: #667380;
+  margin-top: 8px;
+  transition: color 0.2s ease;
+}
+.note-card.open .note-toggle-hint { color: #1a73e8; }
 .note-card.open .note-toggle-hint::after { content: " ▲ 收起"; }
 .note-card:not(.open) .note-toggle-hint::after { content: " ▼ 展开全文"; }
 
-/* 展开区域：默认隐藏，点击卡片后显示（AC-3） */
+/* ---- 展开区域：Day 11 的核心动效 ----
+   老问题：原来用 display: none → block，高度是"瞬间跳出"的，没有过程，用户感觉不到"展开了"。
+   新解法：外层用 grid-template-rows 从 0fr 过渡到 1fr —— 这是纯 CSS 里唯一能
+   把"高度从 0 动画到内容真实高度"做出来的写法，不需要 JS 量高度、也不怕内容多长。
+   内层 .note-body-inner 必须设 overflow: hidden，展开时内容才不会溢出到卡片外面。 */
 .note-body {
-  display: none;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 1px solid transparent;
+  transition: grid-template-rows 0.26s ease,
+              opacity 0.2s ease,
+              margin-top 0.26s ease,
+              padding-top 0.26s ease,
+              border-color 0.26s ease;
 }
 
-.note-card.open .note-body { display: block; }
+.note-body-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.note-card.open .note-body {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-color: #eee;
+}
 
 /* Markdown 渲染出来的正文排版 */
 .note-body h1, .note-body h2, .note-body h3 { font-size: 17px; margin: 16px 0 8px; }
@@ -201,4 +318,22 @@ body {
   .site-header h1 { font-size: 24px; }
   .note-card { padding: 16px; }
   .note-card h3 { font-size: 17px; }
+  /* 通知条在手机上贴边显示，避免过窄留白 */
+  .toast { top: 12px; max-width: calc(100vw - 32px); font-size: 13px; }
+}
+
+/* ---- 尊重"减少动效"偏好（Day 11）----
+   有些用户会因为前庭功能敏感而主动关掉系统动效，这个媒体查询是必须尊重的：
+   动效全部关掉，但反馈本身（通知条文字、箭头、高亮）一个都不能少——
+   也就是说，弱化的是"动"，不是"反馈"。 */
+@media (prefers-reduced-motion: reduce) {
+  .note-body,
+  .note-card,
+  .note-card::before,
+  .toast,
+  .note-toggle-hint {
+    transition: none !important;
+  }
+  .note-card:active { transform: none; }
+  .state-loading .state-icon { animation: none; }
 }

@@ -101,14 +101,33 @@ function buildTagBar() {
     const btn = document.createElement("button");
     btn.className = "tag-btn" + (tag === activeTag ? " active" : "");
     btn.textContent = tag;
+    // Day 11 无障碍：让读屏软件知道这个标签当前是否处于选中状态
+    btn.setAttribute("aria-pressed", String(tag === activeTag));
     btn.addEventListener("click", () => {
       // 再点同一个标签 = 取消筛选，回到全部
       activeTag = tag === activeTag ? "全部" : tag;
       buildTagBar();
       renderNotes();
+      // Day 11 反馈：筛选结果也要说一声，否则用户只看到"卡片突然变少了"
+      announceFilterResult();
     });
     tagBar.appendChild(btn);
   });
+}
+
+// Day 11 反馈：把"筛了什么、还剩几条"说出来（文字通道）
+// 这是标签筛选最容易漏掉的一环——内容变了，但用户不知道为什么变少
+function announceFilterResult() {
+  const count = activeTag === "全部"
+    ? notes.length
+    : notes.filter((n) => n.tags.includes(activeTag)).length;
+
+  const message = activeTag === "全部"
+    ? "已显示全部 " + count + " 篇笔记"
+    : "已筛选标签「" + activeTag + "」，共 " + count + " 篇";
+
+  showToast(message, count > 0 ? "info" : "error");
+  announce(message);
 }
 
 // ============ 4. 渲染：列表 + 筛选 + 空状态（F1 / F2 / AC-1、AC-2、AC-3、AC-4、AC-7）============

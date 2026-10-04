@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>胡政的学习笔记</title>
+  <!-- 站点图标（Day 11）：内联 SVG，不额外增加文件，也省掉 favicon.ico 的 404 请求 -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a73e8'/%3E%3Cpath d='M9 8h14M9 14h14M9 20h9' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -17,6 +19,12 @@
   <div class="mock-banner" id="mock-banner">
     开发中：当前展示的是 <strong>本地示例数据</strong>（mock），不代表真实笔记
   </div>
+
+  <!-- 操作反馈通知条（Day 11）：点击后在这里用文字说明「刚刚生效了什么」 -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- 屏读器专用播报区（Day 11）：视觉上不可见，供读屏软件朗读操作结果 -->
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <main class="container">
     <!-- 标签栏：点击筛选（F3 / AC-4） -->
@@ -37,8 +45,9 @@
     <p><a href="https://github.com/yuyanyanzu/my-website" target="_blank" rel="noopener">GitHub 仓库 →</a></p>
   </footer>
 
-  <!-- 加载顺序有讲究：marked（渲染库）→ mock-data（数据）→ components（组件）→ app（逻辑） -->
+  <!-- 加载顺序有讲究：marked（渲染库）→ feedback（反馈层）→ mock-data（数据）→ components（组件）→ app（逻辑） -->
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="feedback.js"></script>
   <script src="mock-data.js"></script>
   <script src="components.js"></script>
   <script src="app.js"></script>
