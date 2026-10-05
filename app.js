@@ -13,6 +13,11 @@ const MOCK_DELAY = 600;
 const DEMO_STATE = new URLSearchParams(location.search).get("state");
 const DEMO_DELAY = Number(new URLSearchParams(location.search).get("delay")) || MOCK_DELAY;
 
+// Day 12：?tag=某标签 可直接以某个筛选状态打开页面。
+// 为什么需要它：标签栏只列数据里存在的标签，"筛不到结果"这一路点不出来，
+// 加这个参数才能触发并验证 AC-7 的空状态（filter-check Skill 依赖它）。
+const DEMO_TAG = new URLSearchParams(location.search).get("tag");
+
 // 真实文件清单（USE_MOCK = false 时生效）：新增一篇笔记 = 建一个 .md 文件 + 在这里加一行
 const NOTE_FILES = [
   "2026-09-27-给AI定规矩.md",
@@ -96,6 +101,10 @@ function buildTagBar() {
   const tags = ["全部"];
   notes.forEach((n) => n.tags.forEach((t) => { if (!tags.includes(t)) tags.push(t); }));
 
+  // Day 12：当前筛选的标签即使没有笔记，也要出现在栏里并高亮。
+  // 否则用户从 ?tag= 进来会看到"没有任何按钮是选中的"，不知道自己在看什么筛选。
+  if (activeTag !== "全部" && !tags.includes(activeTag)) tags.push(activeTag);
+
   tagBar.innerHTML = "";
   tags.forEach((tag) => {
     const btn = document.createElement("button");
@@ -103,6 +112,12 @@ function buildTagBar() {
     btn.textContent = tag;
     // Day 11 无障碍：让读屏软件知道这个标签当前是否处于选中状态
     btn.setAttribute("aria-pressed", String(tag === activeTag));
+    // Day 12：该标签下没有笔记时给个视觉提示，别让用户点了才发现是空的
+    const count = tag === "全部"
+      ? notes.length
+      : notes.filter((n) => n.tags.includes(tag)).length;
+    btn.title = tag + "：" + count + " 篇笔记";
+    if (count === 0) btn.classList.add("tag-btn-empty");
     btn.addEventListener("click", () => {
       // 再点同一个标签 = 取消筛选，回到全部
       activeTag = tag === activeTag ? "全部" : tag;
@@ -139,9 +154,15 @@ function renderNotes() {
   renderNoteList(noteList, visible);   // 组件来自 components.js
 
   if (visible.length === 0) {
-    showState("empty", activeTag === "全部"
-      ? "还没有任何笔记，写下第一篇就会出现在这里。"
-      : "标签「" + activeTag + "」下还没有笔记，点「全部」返回完整列表。");
+    // Day 12：空状态分两种，文案不能混用——
+    //   ① 全站确实没有笔记（首次使用）→ 引导"写下第一篇"
+    //   ② 有笔记但当前标签筛不出结果（AC-7）→ 引导"点全部返回"
+    // 注意：标签栏只列出数据里存在的标签，所以情况②在正常点击下走不到，
+    // 需要靠 ?tag=不存在的标签 或数据变化触发。filter-check Skill 会盯这一点。
+    const filteredEmpty = activeTag !== "全部";
+    showState("empty", filteredEmpty
+      ? "标签「" + activeTag + "」下还没有笔记，点「全部」返回完整列表。"
+      : "还没有任何笔记，写下第一篇就会出现在这里。");
   } else {
     clearState();
   }
@@ -153,6 +174,10 @@ async function init() {
   try {
     notes = await fetchNotes();
     notes.sort((a, b) => (a.date < b.date ? 1 : -1));   // 日期倒序（AC-1）
+
+    // Day 12：若网址带了 ?tag=，直接以该筛选状态开局（用于验证空状态与截图）
+    if (DEMO_TAG) activeTag = DEMO_TAG;
+
     buildTagBar();
     renderNotes();
   } catch (err) {

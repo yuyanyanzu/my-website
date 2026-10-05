@@ -80,6 +80,38 @@ npx serve .
 
 **动效可关闭**：系统里开了"减少动效"的用户，动画会自动关掉，但文字提示和箭头变化全部保留——弱化的是"动"，不是"反馈"。
 
+## Day 12：filter-check Skill（筛选交互自动检查）
+
+把"改完筛选代码该查什么"固化成了一个 Skill，放在项目里：`skill/filter-check/`。
+
+**它检查什么（一句话）**：筛选交互的三种情况是否都正确——有结果时只剩该标签的笔记、无结果时显示空状态而不是白屏、清空筛选后完整列表恢复；外加键盘和读屏能不能用。
+
+| 文件 | 作用 |
+|---|---|
+| `skill/filter-check/SKILL.md` | Skill 正文：什么时候用、查什么、按什么步骤、常见坑 |
+| `skill/filter-check/check-filter.cjs` | 可执行检查脚本（静态 10 项 + 浏览器实测 20 项） |
+| `skill/filter-check/INVOCATION-LOG.md` | 调用记录：每次调用的时间、发现的问题、结论 |
+
+**怎么用**：
+
+```bash
+# 静态检查（不依赖浏览器）
+node skill/filter-check/check-filter.cjs
+
+# 完整检查（含浏览器实测，需要 8080 服务器在跑）
+NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
+  node skill/filter-check/check-filter.cjs --browser
+```
+
+**预览筛选状态的新入口**（Day 12 加的）：
+
+| 网址 | 看到的状态 |
+|---|---|
+| `http://localhost:8080/?tag=Git` | 直接以「Git」筛选状态打开 |
+| `http://localhost:8080/?tag=任意不存在的标签` | 触发 AC-7 的筛选空状态 |
+
+标签栏现在还会给每个标签显示篇数提示（鼠标悬停可见），空标签用虚线边框标识。
+
 ## 如何发布一篇新笔记
 
 1. 在 `notes/` 目录新建一个 `.md` 文件，头部按固定格式写四行字段：
@@ -103,11 +135,13 @@ npx serve .
 my-website/
 ├── index.html      页面骨架
 ├── style.css       样式（手机适配 / 四种状态 / 展开动效与通知条）
-├── app.js          数据源开关 / 四种状态 / 标签筛选逻辑
+├── app.js          数据源开关 / 四种状态 / 标签筛选逻辑（含 ?tag= 预览入口）
 ├── components.js   可复用组件：卡片、列表、状态提示（Day 8）、卡片展开交互（Day 11）
 ├── feedback.js     操作反馈层：通知条 + 读屏播报（Day 11）
 ├── mock-data.js    本地假数据，8 篇示例笔记（Day 8）
 ├── notes/          真实笔记（Markdown 文件，头部含字段）
+├── skill/          AI 检查技能（Day 12）
+│   └── filter-check/   筛选三态检查：SKILL.md + 脚本 + 调用记录
 ├── PRD.md          需求文档（Day 4）
 ├── TECH_DESIGN.md  技术设计（Day 5）
 ├── research.md     需求研究（Day 3）

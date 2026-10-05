@@ -106,6 +106,13 @@ body {
   border-color: #1a73e8;
 }
 
+/* Day 12：该标签下没有笔记时，用虚线边框提示"点了会是空的" */
+.tag-btn-empty:not(.active) {
+  border-style: dashed;
+  color: #667380;
+}
+.tag-btn-empty.active { background: #667380; border-color: #667380; }
+
 /* ---- 笔记卡片（F1 / F2）---- */
 .note-list { padding: 8px 0 40px; }
 
