@@ -125,6 +125,54 @@ async function main() {
   process.exit(fail === 0 ? 0 : 1);
 }
 
+// 确保 8080 上有静态服务；没有就自己起一个，跑完再关掉。
+// 这样重跑检查不会因为「忘了先开服务」而卡在 8s 超时上。
+async function ensureServer(root) {
+  const http = require("http");
+  const fs = require("fs");
+  const path = require("path");
+
+  const alive = await new Promise((resolve) => {
+    const req = http.get("http://127.0.0.1:8080/", (res) => {
+      res.resume();
+      resolve(res.statusCode === 200);
+    });
+    req.on("error", () => resolve(false));
+    req.setTimeout(1500, () => { req.destroy(); resolve(false); });
+  });
+  if (alive) return { server: null, started: false };
+
+  const MIME = {
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".json": "application/json; charset=utf-8",
+  };
+
+  const server = http.createServer((req, res) => {
+    const urlPath = decodeURIComponent(req.url.split("?")[0]);
+    const rel = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
+    const file = path.join(root, rel);
+    // 防目录穿越：解析后必须仍在项目根目录内
+    if (!path.resolve(file).startsWith(path.resolve(root))) {
+      res.writeHead(403); res.end("forbidden"); return;
+    }
+    fs.readFile(file, (err, data) => {
+      if (err) { res.writeHead(404); res.end("not found"); return; }
+      res.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "application/octet-stream" });
+      res.end(data);
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(8080, "127.0.0.1", resolve);
+  });
+  return { server, started: true };
+}
+
 async function runBrowserChecks() {
   console.log("\n【3】浏览器实测（本机 Edge）");
 
@@ -139,6 +187,9 @@ async function runBrowserChecks() {
   const EDGE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
   const URL = "http://127.0.0.1:8080/";
 
+  const { server, started } = await ensureServer(ROOT);
+  if (started) console.log("  （8080 无服务，已自动启动本地静态服务）");
+
   let browser;
   try {
     browser = await puppeteer.launch({
@@ -148,6 +199,7 @@ async function runBrowserChecks() {
     });
   } catch (e) {
     record("fail", "启动 Edge", e.message.slice(0, 80));
+    if (server) server.close();
     return;
   }
 
@@ -320,6 +372,7 @@ async function runBrowserChecks() {
     record(jsErrors.length === 0 ? "pass" : "fail", "全程无 JS 报错", jsErrors.join(" | "));
   } finally {
     await browser.close();
+    if (server) server.close();
   }
 }
 

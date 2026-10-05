@@ -23,9 +23,13 @@ description_en: "Check tag-filter states and accessibility"
 
 ## 前置条件
 
-1. 本地服务器在跑：`python -m http.server 8080`（**不能双击 index.html**，`file://` 协议下 fetch 会被拦）
-2. 浏览器验证需要本机 Edge + 已安装的 puppeteer-core：
+1. 浏览器验证需要本机 Edge + 已安装的 puppeteer-core：
    `NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules"`
+2. 本地服务器：`--browser` 模式会**自己检查 8080 端口**，没有服务就自动起一个静态服务、跑完自动关。
+   所以不必先手动开服务（早期版本需要，容易忘，忘的表现是卡 8 秒后报
+   `Waiting for selector ".note-card" failed`，看着像页面坏了，其实只是没人服务这个端口）。
+   手动开服务仅供自己在浏览器里点着看：`python -m http.server 8080`
+   （**不能双击 index.html**，`file://` 协议下 fetch 会被拦）
 
 ## 检查步骤
 
@@ -52,7 +56,7 @@ http://localhost:8080/?tag=不存在的标签
 ```bash
 cd my-website
 node skill/filter-check/check-filter.cjs            # 只做静态检查
-node skill/filter-check/check-filter.cjs --browser  # 加本机 Edge 实测（需要 8080 已在跑）
+node skill/filter-check/check-filter.cjs --browser  # 加本机 Edge 实测（8080 没服务会自动起一个）
 ```
 
 浏览器模式需要 puppeteer-core，用这个环境变量指向已装好的位置：
@@ -105,6 +109,7 @@ NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
 5. **状态区和列表同时显示**：`renderNotes()` 里必须"要么清状态、要么显示状态"，不能两个都留。
 6. **异步检查没 await**：`check-filter.cjs` 里浏览器检查是 async，必须 `await` 后才打印总结，否则结论会在检查跑完前就输出（Day 12 亲手踩过，表现为"浏览器实测"标题下方空无一物）。
 7. **该筛选的标签不在栏里**：从 `?tag=` 进页面时，若这个标签在数据里不存在，`buildTagBar()` 要把它补进栏里并高亮，否则用户看不到自己在筛什么。
+8. **忘了先开 8080，误判成页面坏了**：`--browser` 早期版本不自带服务，重跑时若 8080 没人监听，puppeteer 会卡 8 秒然后抛 `Waiting for selector ".note-card" failed`。这个报错**指向选择器，实际是端口问题**，很容易让人去改 `components.js`。现在脚本会自己起服务并在输出里写「8080 无服务，已自动启动本地静态服务」；看到这行说明是它自己起的，属正常。
 
 ## 不做什么
 
