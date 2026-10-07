@@ -209,7 +209,41 @@ async function runBrowserChecks() {
 
   try {
     await page.goto(URL, { waitUntil: "networkidle2" });
-    await page.waitForSelector(".note-card", { timeout: 8000 });
+
+    // 等卡片出现。等不到时**不要**只报「选择器超时」——那个说法会把排查方向引到
+    // components.js 的卡片渲染上，而真正的原因通常在更前面：外部依赖没加载，脚本直接抛错。
+    // 这里把渲染链上每一环都查一遍，直接指出断在哪一环。
+    try {
+      await page.waitForSelector(".note-card", { timeout: 8000 });
+    } catch (e) {
+      const diag = await page.evaluate(() => ({
+        marked: typeof marked,
+        mockNotes: typeof MOCK_NOTES,
+        renderNotes: typeof renderNotes,
+        cards: document.querySelectorAll(".note-card").length,
+        noteListLen: (document.getElementById("note-list") || {}).textContent?.length || 0,
+      }));
+
+      let cause;
+      if (diag.marked === "undefined") {
+        cause = "marked 未加载（index.html 通过 CDN 引 marked.js，网络不通或 CDN 被拦）；" +
+                "components.js 里的 marked.parse() 会抛错，整张列表都渲染不出来，" +
+                "但筛选逻辑本身没问题";
+      } else if (diag.mockNotes === "undefined") {
+        cause = "mock-data.js 未加载（MOCK_NOTES 未定义）";
+      } else if (diag.renderNotes === "undefined") {
+        cause = "app.js 未加载（renderNotes 未定义）";
+      } else if (diag.cards === 0 && diag.noteListLen === 0) {
+        cause = "脚本执行时报错，列表区是空的";
+      } else {
+        cause = "卡片没渲染进 .note-list（DOM 结构或选择器变了？）";
+      }
+
+      record("fail", "初始列表渲染", "等不到 .note-card —— " + cause);
+      console.log("  现场：" + JSON.stringify(diag));
+      if (jsErrors.length) console.log("  页面 JS 报错：" + jsErrors.join(" | "));
+      return;
+    }
 
     const total = await page.$$eval(".note-card", (els) => els.length);
     record(total > 0 ? "pass" : "fail", "初始列表渲染", total + " 篇");
