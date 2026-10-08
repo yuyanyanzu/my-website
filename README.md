@@ -112,6 +112,50 @@ NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
 
 标签栏现在还会给每个标签显示篇数提示（鼠标悬停可见），空标签用虚线边框标识。
 
+## Day 13：三个视图切换（hash 路由）+ 四种状态
+
+**页面之间怎么切换？用的是 hash 路由**（网址里 `#` 后面那段），不引入任何路由库。
+
+| 为什么选 hash | 说明 |
+|---|---|
+| 地址栏可见可分享 | `#/note/2026-09-22` 能收藏、能刷新、能发给别人 |
+| 前进/后退自动生效 | 浏览器原生处理历史栈，不用自己维护 |
+| 零依赖、静态站原生可用 | GitHub Pages 不需要任何服务器配置 |
+| 够用就好 | 今天只有 3 个视图，路由库的进阶用法用不上 |
+
+**三个视图**：
+
+| 视图 | 地址 | 内容 |
+|---|---|---|
+| 笔记列表 | `#/` | 标签栏 + 卡片列表（Day 7~12 的全部成果都在这里） |
+| 单篇笔记 | `#/note/<日期>` | 面包屑 + 完整正文 + 返回上一页 |
+| 关于 | `#/about` | 自我介绍 + 学习目标 + GitHub 链接（与底部关于区共用同一份文案） |
+
+**从哪里进入单篇视图**：每张卡片底部有「打开独立页面 →」。点卡片本体仍是原位展开（AC-3 的交互保留不变），两个动作分开做。
+
+**地址写错时的表现**：`#/note/1999-01-01` 会显示「没有找到这篇笔记」，并给出回列表的链接——这是「找不到」状态，和「出错」是两回事，文案不混用。
+
+**四种状态**（列表数据）：
+
+| 网址 | 状态 |
+|---|---|
+| `http://localhost:8080/` | ② 正常：8 篇卡片 |
+| `http://localhost:8080/?delay=3000` | ① 加载中：停留 3 秒方便观察 |
+| `http://localhost:8080/?state=empty` | ③ 空：全站没有笔记 |
+| `http://localhost:8080/?state=error` | ④ 出错：含排查指引 |
+
+**自测脚本**（先起 8080 服务，脚本也会自己起）：
+
+```bash
+NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
+  node day13-views-test.cjs
+```
+
+覆盖 32 项：三个视图互相切换、地址栏同步、前进/后退、直接输地址、刷新后停留原地、地址写错、四种状态、375px 手机宽度、以及 Day 11/12 成果的回归。
+
+**文件分工**：路由机制独立在 `router.js`（只管"现在是哪个视图"，不管渲染）；视图渲染在 `app.js` 的 `onViewChange()`；面包屑/详情/找不到提示三个新组件在 `components.js`。
+
+
 ## 如何发布一篇新笔记
 
 1. 在 `notes/` 目录新建一个 `.md` 文件，头部按固定格式写四行字段：
@@ -133,10 +177,11 @@ NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
 
 ```text
 my-website/
-├── index.html      页面骨架
-├── style.css       样式（手机适配 / 四种状态 / 展开动效与通知条）
-├── app.js          数据源开关 / 四种状态 / 标签筛选逻辑（含 ?tag= 预览入口）
-├── components.js   可复用组件：卡片、列表、状态提示（Day 8）、卡片展开交互（Day 11）
+├── index.html      页面骨架（Day 13 加主导航与三个视图容器）
+├── style.css       样式（手机适配 / 四种状态 / 展开动效与通知条 / 视图切换样式）
+├── app.js          数据源开关 / 四种状态 / 标签筛选 / 视图切换渲染（含 ?tag= 预览入口）
+├── router.js       hash 路由：解析地址、切换视图、前进后退（Day 13）
+├── components.js   可复用组件：卡片、列表、状态提示、卡片展开交互、面包屑/详情/找不到（Day 13）
 ├── feedback.js     操作反馈层：通知条 + 读屏播报（Day 11）
 ├── mock-data.js    本地假数据，8 篇示例笔记（Day 8）
 ├── notes/          真实笔记（Markdown 文件，头部含字段）
@@ -156,8 +201,10 @@ my-website/
 |---|---|
 | `day11-interaction-test.cjs` | 交互反馈 + 连续操作压力测试（含连点 100 次），用内置 DOM 桩，不需要浏览器 |
 | `day11-browser-check.cjs` | 用本机 Edge 真跑页面，验证展开动画、通知条可见性、键盘操作 |
+| `day13-views-test.cjs` | 三个视图切换 + 四种状态 + 手机宽度（Day 13，自带服务启动） |
 
 ```bash
 node day11-interaction-test.cjs    # 随时可跑，不依赖浏览器
 node day11-browser-check.cjs       # 需要本机装了 Edge，且本地服务器已在 8080 运行
+node day13-views-test.cjs          # 需要本机装了 Edge（8080 没服务会自己起一个）
 ```

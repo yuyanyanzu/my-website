@@ -13,6 +13,14 @@
   <header class="site-header">
     <h1>胡政的学习笔记</h1>
     <p class="site-slogan">一个零基础学习者的 30 天建站记录，每天学什么，这里都能看到。</p>
+
+    <!-- 主导航（Day 13）：三个视图互相切换的入口
+         用原生 <a href="#/...">，好处是：鼠标中键能新开标签、能复制链接、
+         不靠 JS 也能跳转；JS 只负责"跳完之后渲染什么" -->
+    <nav class="main-nav" aria-label="主导航">
+      <a class="nav-link" data-nav="list"  href="#/">笔记</a>
+      <a class="nav-link" data-nav="about" href="#/about">关于</a>
+    </nav>
   </header>
 
   <!-- 开发提示条（Day 8）：当前数据来自本地假数据，方便对照 -->
@@ -27,29 +35,44 @@
   <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <main class="container">
-    <!-- 标签栏：点击筛选（F3 / AC-4） -->
-    <nav id="tag-bar" class="tag-bar" aria-label="标签筛选"></nav>
+    <!-- ============ 视图 1：笔记列表（Day 13 起被视图机制包起来）============ -->
+    <section id="view-list" class="view">
+      <!-- 标签栏：点击筛选（F3 / AC-4） -->
+      <nav id="tag-bar" class="tag-bar" aria-label="标签筛选"></nav>
 
-    <!-- 笔记列表：按日期倒序的卡片（F1 / AC-1、AC-2） -->
-    <section id="note-list" class="note-list" aria-label="笔记列表"></section>
+      <!-- 笔记列表：按日期倒序的卡片（F1 / AC-1、AC-2） -->
+      <section id="note-list" class="note-list" aria-label="笔记列表"></section>
 
-    <!-- 状态区：加载中 / 空 / 出错 三种非正常状态都渲染在这里（Day 8） -->
-    <div id="state-area" class="state-area" hidden></div>
+      <!-- 状态区：加载中 / 空 / 出错 三种非正常状态都渲染在这里（Day 8） -->
+      <div id="state-area" class="state-area" hidden></div>
+    </section>
+
+    <!-- ============ 视图 2：单篇笔记（Day 13 新增）============ -->
+    <section id="view-note" class="view" hidden></section>
+
+    <!-- ============ 视图 3：关于（Day 13 新增）============ -->
+    <section id="view-about" class="view" hidden></section>
   </main>
 
-  <!-- 关于区块（F4 / AC-5）：自我介绍 + 学习目标 + GitHub 链接 -->
+  <!-- 关于区文案（F4 / AC-5）：自我介绍 + 学习目标 + GitHub 链接。
+       Day 13 起它同时是「关于」视图的内容来源——两处共用同一份文案，
+       避免"底部改了、关于页没改"的不一致。hidden 是因为详情页由 JS 填充。 -->
   <footer class="about">
     <h2>关于这个站</h2>
-    <p>我是胡政，一个从零开始学做网站的人。这个站本身就是我的学习成果——用纯 HTML/CSS/JS 搭建，笔记用 Markdown 写、用 Git 提交发布。</p>
-    <p><strong>学习目标：</strong>30 天内独立完成一个能公开访问的学习笔记站，并把过程全部记录下来。</p>
-    <p><a href="https://github.com/yuyanyanzu/my-website" target="_blank" rel="noopener">GitHub 仓库 →</a></p>
+    <div id="about-source">
+      <p>我是胡政，一个从零开始学做网站的人。这个站本身就是我的学习成果——用纯 HTML/CSS/JS 搭建，笔记用 Markdown 写、用 Git 提交发布。</p>
+      <p><strong>学习目标：</strong>30 天内独立完成一个能公开访问的学习笔记站，并把过程全部记录下来。</p>
+      <p><a href="https://github.com/yuyanyanzu/my-website" target="_blank" rel="noopener">GitHub 仓库 →</a></p>
+    </div>
   </footer>
 
-  <!-- 加载顺序有讲究：marked（渲染库）→ feedback（反馈层）→ mock-data（数据）→ components（组件）→ app（逻辑） -->
+  <!-- 加载顺序有讲究：marked（渲染库）→ feedback（反馈层）→ mock-data（数据）
+       → components（组件）→ router（路由）→ app（逻辑） -->
   <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
   <script src="feedback.js"></script>
   <script src="mock-data.js"></script>
   <script src="components.js"></script>
+  <script src="router.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

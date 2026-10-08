@@ -1,6 +1,7 @@
 /* style.css — 学习笔记站样式
-   创建 Day 7，Day 9 设计审查修复，Day 11 加入交互反馈
-   结构：全局 → 页头 → 通知条 → 标签栏 → 笔记卡片 → 状态 → 关于区块 → 手机适配 → 减少动效偏好 */
+   创建 Day 7，Day 9 设计审查修复，Day 11 加入交互反馈，Day 13 加入视图切换
+   结构：全局 → 页头 → 主导航 → 通知条 → 标签栏 → 笔记卡片 → 状态 →
+         面包屑与详情视图 → 关于视图 → 手机适配 → 减少动效偏好 */
 
 /* ---- 全局 ---- */
 * { box-sizing: border-box; }
@@ -40,6 +41,42 @@ body {
 
 .site-header h1 { margin: 0 0 8px; font-size: 30px; }
 .site-header .site-slogan { margin: 0; color: #dbe8ff; font-size: 15px; }
+
+/* ---- 主导航（Day 13）----
+   三个视图互相切换的入口。用 <a href="#/..."> 而不是 <button>：
+   链接天然支持中键新开、右键复制地址、悬停看地址，这些是按钮给不了的。
+   选中态用"底部白色下划线 + 加粗"，在蓝色页头上对比度足够（白字蓝底约 4.8:1）。 */
+.main-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.nav-link {
+  color: #dbe8ff;
+  text-decoration: none;
+  font-size: 15px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border-bottom: 3px solid transparent;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.nav-link:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+
+/* 当前所在视图：白底蓝字，和未选中明显区分 */
+.nav-link.active {
+  background: #fff;
+  color: #1a73e8;
+  font-weight: 700;
+}
+
+/* 键盘焦点（与 Day 11 的焦点样式保持一致的视觉语言） */
+.nav-link:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
 
 /* ---- 操作反馈通知条（Day 11）----
    位置：固定在屏幕顶部居中，浮在内容之上
@@ -319,6 +356,117 @@ body {
 .about p { max-width: 560px; margin: 6px auto; color: #555; font-size: 14px; }
 .about a { color: #1a73e8; }
 
+/* ============ Day 13：视图切换相关样式 ============ */
+
+/* 视图容器：同一时刻只有一个可见（由 JS 切换 hidden 属性）
+   用 [hidden] 强制 display:none —— 因为下面给 .view 设了 padding，
+   而元素一旦有自定义 display，浏览器默认的 [hidden]{display:none} 会失效 */
+.view { padding-bottom: 8px; }
+.view[hidden] { display: none; }
+
+/* ---- 面包屑（余力加练）---- */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0 4px;
+  font-size: 14px;
+}
+
+.crumb-link { color: #1a73e8; text-decoration: none; }
+.crumb-link:hover { text-decoration: underline; }
+
+/* 当前位置：不可点、加粗，和可点的上级区分开 */
+.crumb-current { color: #5f6b76; font-weight: 700; }
+
+/* 分隔符用伪元素画，读屏软件读不到（标记了 aria-hidden，这里再保证视觉居中） */
+.crumb-sep::before {
+  content: "›";
+  color: #b6c0cc;
+  margin-left: 2px;
+}
+
+/* ---- 单篇笔记视图 ---- */
+.note-detail {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px 32px;
+  margin: 12px 0 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.note-detail-title { margin: 10px 0 8px; font-size: 25px; line-height: 1.35; }
+.note-detail-summary { margin: 0; color: #5f6b76; font-size: 15px; }
+
+/* 详情正文：和卡片里的正文排版共用同一套规则，只把字号放大一点（独立页面阅读更久） */
+.note-detail-body {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #eee;
+  font-size: 15px;
+}
+.note-detail-body h1, .note-detail-body h2 { font-size: 18px; margin: 18px 0 8px; }
+.note-detail-body h3 { font-size: 16px; margin: 16px 0 8px; }
+.note-detail-body ul, .note-detail-body ol { padding-left: 24px; }
+.note-detail-body code {
+  background: #f0f2f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.note-detail-body pre {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 12px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.note-detail-body pre code { background: none; color: inherit; padding: 0; }
+.note-detail-body table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; }
+.note-detail-body th, .note-detail-body td { border: 1px solid #e3e9f2; padding: 8px 12px; text-align: left; }
+.note-detail-body th { background: #f7f9fc; }
+
+/* 返回上一页 */
+.back-line { margin: 0 0 40px; font-size: 14px; }
+.back-link { color: #1a73e8; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
+
+/* ---- 卡片上的"打开独立页面"链接 ---- */
+.note-open-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #1a73e8;
+  text-decoration: none;
+}
+.note-open-link:hover { text-decoration: underline; }
+
+/* ---- 关于视图 ---- */
+.about-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  margin: 20px 0 40px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+.about-card h2 { font-size: 22px; margin: 0 0 16px; }
+.about-card p { max-width: 560px; margin: 10px auto; color: #555; font-size: 15px; }
+.about-card a { color: #1a73e8; }
+
+/* 键盘焦点：和 Day 11 的焦点样式统一（链接类元素） */
+.crumb-link:focus-visible,
+.back-link:focus-visible,
+.note-open-link:focus-visible {
+  outline: 3px solid #1a73e8;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* 全站主内容区的高度下限：避免"加载中"这类内容很少的视图把页面压得过矮 */
+.container { min-height: 340px; }
+
 /* ---- 手机适配（AC-6）：375px 宽度下无横向滚动、单列可读 ---- */
 @media (max-width: 600px) {
   .site-header { padding: 28px 16px 24px; }
@@ -327,6 +475,11 @@ body {
   .note-card h3 { font-size: 17px; }
   /* 通知条在手机上贴边显示，避免过窄留白 */
   .toast { top: 12px; max-width: calc(100vw - 32px); font-size: 13px; }
+  /* Day 13：详情页与关于页在小屏上收窄内边距，保证正文可读宽度 */
+  .note-detail { padding: 20px 18px 24px; border-radius: 10px; }
+  .note-detail-title { font-size: 21px; }
+  .about-card { padding: 24px 18px; }
+  .main-nav { margin-top: 16px; }
 }
 
 /* ---- 尊重"减少动效"偏好（Day 11）----
