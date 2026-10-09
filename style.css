@@ -433,14 +433,26 @@ body {
 .back-link:hover { text-decoration: underline; }
 
 /* ---- 卡片上的"打开独立页面"链接 ---- */
+/* Day 14 最小修复：「打开独立页面 →」看起来不像链接
+   来源：走查实测（day14-walkthrough.cjs）——它是卡片里唯一能进详情页的入口，
+   但 ① 没有下划线，只靠蓝色和周围黑字区分（违反 WCAG 1.4.1：不能只靠颜色传达信息）；
+   ② 与上方「▼ 展开全文」同为 13px、只隔 6px，一个能点一个不能点，容易看成一类说明文字；
+   ③ 点击区只有 95×22px，手机上远低于建议的 44px 高度。
+   改法：补下划线 + 撑大点击区（用负 margin 让文字左边缘位置不变）。
+   只动这一处——真人的其他反馈等测试回来再改，不做"一口气全改"。 */
 .note-open-link {
   display: inline-block;
   margin-top: 6px;
+  margin-left: -10px;          /* 抵消下面的左内边距，文字视觉位置不变 */
+  padding: 11px 10px;          /* 点击区 95×22px → 约 115×44px，达到手机建议的最小触控高度 */
   font-size: 13px;
   color: #1a73e8;
-  text-decoration: none;
+  text-decoration: underline;  /* 修复①：不看颜色也能认出是链接 */
+  text-underline-offset: 3px;  /* 小字配下划线，拉开一点才不糊成一团 */
+  border-radius: 4px;
 }
-.note-open-link:hover { text-decoration: underline; }
+/* 下划线已常驻，hover 改用底色给第二个信号 */
+.note-open-link:hover { background: #e8f0fe; }
 
 /* ---- 关于视图 ---- */
 .about-card {
