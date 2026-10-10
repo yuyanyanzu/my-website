@@ -184,6 +184,60 @@ NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
 
 > ⚠️ 注意：站**还没上线**（GitHub Pages 未开启），需要手机测试时走局域网：电脑运行 `python -m http.server 8080`，手机连同一 WiFi 访问 `http://192.168.246.79:8080`。详见 `day14-test-plan.md` 第 0 节。
 
+## Day 15：上公网——云函数 + 静态托管
+
+**公网地址第一次打开时，你第一个想确认的是哪一件事？**
+
+答：**这个地址背后跑的，到底是不是我刚才写的那份代码。**
+
+本地能跑 ≠ 公网跑的是同一个东西。从"我电脑上"到"公网可访问"中间隔着好几道：代码有没有真的传上去、云端跑的是哪个版本、`/api/health` 这个路径有没有真的指到我的函数、有没有打到错误的环境。
+
+所以 health 返回的字段不是凑数的——`service` / `version` / `env` 回答"是不是我的东西、哪一版、哪个环境"，
+而 `time` 最关键：**它是实时生成的，能证明这个响应是"现在算出来的"，不是缓存或静态文件冒充的。**
+
+第二个想确认的是「这个地址是不是谁都能打开」——公网意味着任何人都能访问，
+所以**不能把整个项目目录都传上去**（文档、测试脚本、截图都属于开发过程）。
+`deploy-frontend.cjs` 用白名单只挑该上线的文件，就是为了这个。
+
+### 后端结构
+
+| 部分 | 用什么 | 公网地址 |
+|---|---|---|
+| 接口 | CloudBase 云函数 `health` + HTTP 访问服务 | `https://<服务ID>.service.tcloudbase.com/api/health` |
+| 页面 | CloudBase 静态网站托管 | 控制台「静态网站托管」页显示的默认域名 |
+
+**为什么云函数默认不能被公网访问**：云函数生来是给云开发内部调用的。要暴露成网址，得由「HTTP 访问服务」
+把某个路径映射到某个函数上——部署时的 `--path /api/health` 就是干这个的。
+
+### 新增文件
+
+| 文件 | 干什么 |
+|---|---|
+| `cloudfunctions/health/index.js` | 第一个云函数：健康检查（含逐段注释） |
+| `cloudbaserc.json` | CloudBase 项目配置（函数清单 + 环境 ID） |
+| `api-contract.md` | **接口契约**：统一响应格式、错误码表、health 接口定义 |
+| `DEPLOY.md` | 部署操作手册（开通环境 → 装 CLI → 部署 → 排查报错） |
+| `deploy-frontend.cjs` | 把该上线的前端文件收集到 `dist/`（白名单方式） |
+
+### 接口契约的核心约定
+
+成功 `{ code: 0, message, data }`；失败 `{ code: 非0, message, data: null }`。
+
+- **前端判断成败看 `code`，不看 HTTP 状态码**（状态码可能被网关/CDN 改写，`code` 是我们自己控制的）
+- `code` 与 HTTP 状态码**语义保持一致**：人看状态码，程序看 `code`，监控两边都能用
+- 错误码规则：`HTTP 状态码 × 100 + 两位细分`（400 → `40000`）
+
+### 部署命令速查
+
+```bash
+tcb fn deploy health --httpFn --path /api/health   # 部署接口
+node deploy-frontend.cjs && tcb hosting deploy ./dist   # 部署页面
+```
+
+### 今天没做（Day 16–20）
+
+跨域、真实业务接口、数据库建表。**所以公网页面暂时还不能调用 `/api/health`**——这是排期，不是 bug。
+
 
 ## 如何发布一篇新笔记
 

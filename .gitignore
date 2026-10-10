@@ -6,6 +6,9 @@
 # 依赖目录
 node_modules/
 
+# 前端部署产物（Day 15 起，由 deploy-frontend.cjs 生成，不是源码）
+dist/
+
 # 密钥、证书与凭证文件（禁止上传）
 *.pem
 *.key

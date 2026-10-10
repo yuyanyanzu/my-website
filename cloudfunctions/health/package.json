@@ -1,0 +1,8 @@
+{
+  "name": "health",
+  "version": "0.1.0",
+  "description": "Day 15 健康检查云函数：确认服务活着、返回版本与环境信息（契约见 api-contract.md）",
+  "main": "index.js",
+  "private": true,
+  "license": "UNLICENSED"
+}
