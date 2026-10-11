@@ -216,8 +216,9 @@ NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
 | `cloudfunctions/health/index.js` | 第一个云函数：健康检查（含逐段注释） |
 | `cloudbaserc.json` | CloudBase 项目配置（函数清单 + 环境 ID） |
 | `api-contract.md` | **接口契约**：统一响应格式、错误码表、health 接口定义 |
-| `DEPLOY.md` | 部署操作手册（开通环境 → 装 CLI → 部署 → 排查报错） |
+| `DEPLOY.md` | 部署操作手册（**两条路线**：CLI，或纯网页控制台点鼠标） |
 | `deploy-frontend.cjs` | 把该上线的前端文件收集到 `dist/`（白名单方式） |
+| `dist/health-function.zip` | 打包好的云函数，控制台「上传 ZIP 包」可直接用（构建产物，不入库） |
 
 ### 接口契约的核心约定
 
