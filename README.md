@@ -209,6 +209,12 @@ NODE_PATH="C:/Users/胡政/.workbuddy/binaries/node/workspace/node_modules" \
 **为什么云函数默认不能被公网访问**：云函数生来是给云开发内部调用的。要暴露成网址，得由「HTTP 访问服务」
 把某个路径映射到某个函数上——部署时的 `--path /api/health` 就是干这个的。
 
+> **✅ 前端已上公网（2026-10-11）**：CloudBase 开通前，前端 mock 版先用内置发布能力上了公网——
+> **<https://study-notes-site-52579.app.workbuddy.host/>**（手机可直接打开）。
+> 公网校验 21/21 通过（`day15-public-check.cjs`，直接打公网地址跑：首页 200、8 张卡片、marked.js CDN 可用、
+> 三视图可切换、分享链接直达单篇、DEPLOY.md 等内部文档确认 404 未泄漏）。
+> CloudBase 静态托管开通后，前端以 CloudBase 域名为准，这个链接留作对照。`/api/health` 仍待 CloudBase。
+
 ### 新增文件
 
 | 文件 | 干什么 |
